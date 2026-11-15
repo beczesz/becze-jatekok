@@ -1,0 +1,37 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$room": {
+        "host": {
+          ".read": "auth != null",
+          ".write": "auth != null && $room.matches(/^[A-Z]{4}$/) && (!data.exists() || data.val() === auth.uid)",
+          ".validate": "newData.isString() && newData.val() === auth.uid"
+        },
+        "state": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms').child($room).child('host').val() === auth.uid",
+          ".validate": "newData.isString() && newData.val().length < 30000"
+        },
+        "inputs": {
+          ".read": "auth != null && root.child('rooms').child($room).child('host').val() === auth.uid",
+          "$id": {
+            ".write": "auth != null && root.child('rooms').child($room).child('host').exists() && ((!data.exists() && newData.exists()) || root.child('rooms').child($room).child('host').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['p', 'type', 'uid']) && newData.child('uid').val() === auth.uid",
+            "p": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5" },
+            "type": { ".validate": "newData.isString() && newData.val().length <= 12" },
+            "uid": { ".validate": "newData.isString()" },
+            "slot": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5" },
+            "lane": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5" },
+            "to": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5" },
+            "tower": { ".validate": "newData.isString() && newData.val().length <= 8" },
+            "ease": { ".validate": "newData.isString() && newData.val().length <= 8" },
+            "role": { ".validate": "newData.isString() && newData.val().length <= 10" },
+            "$other": { ".validate": false }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Becze Család Defender: próba egy képernyőn</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #020617; font: 14px system-ui, sans-serif; color: #94a3b8; }
+  .top { display: flex; gap: 10px; align-items: center; padding: 6px 10px; }
+  .top a { color: #7dd3fc; }
+  .screen { padding: 0 8px; }
+  .screen iframe { width: 100%; aspect-ratio: 16 / 9; max-height: 52vh; border: 2px solid #1e293b; border-radius: 12px; background: #0f172a; display: block; margin: 0 auto; }
+  #phones { display: grid; gap: 8px; padding: 8px; height: calc(48vh - 50px); }
+  .cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .cell iframe { flex: 1; border: 2px solid #1e293b; border-radius: 12px; background: #0f172a; width: 100%; }
+</style>
+</head>
+<body>
+<div class="top">Próba: <span id="cnt"></span> játékos · <a href="?n=3">3</a> <a href="?n=4">4</a> <a href="?n=5">5</a> · <a href="index.html">vissza</a></div>
+<div class="screen"><iframe src="screen.html?helyi=1" title="Kivetítő"></iframe></div>
+<div id="phones"></div>
+<script type="module">
+  import { PLAYERS } from './rules.js';
+  const n = Math.min(5, Math.max(1, Number(new URLSearchParams(location.search).get('n')) || 3));
+  document.getElementById('cnt').textContent = n;
+  const box = document.getElementById('phones');
+  box.style.gridTemplateColumns = `repeat(${n}, minmax(0, 1fr))`;
+  for (let p = 1; p <= n; p++) {
+    const d = document.createElement('div');
+    d.className = 'cell';
+    d.innerHTML = `${PLAYERS[p].icon} ${PLAYERS[p].name} telefon<iframe src="phone.html?helyi=1&p=${p}" title="${PLAYERS[p].name} telefon"></iframe>`;
+    box.appendChild(d);
+  }
+</script>
+</body>
+</html>

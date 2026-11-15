@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<title>Becze Család Defender: telefon</title>
+<style>
+  :root { --c: #64748b; --soft: #e2e8f0; --lc: #64748b; --bg: #0f172a; --card: #1e293b; --txt: #f8fafc; --mut: #94a3b8; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--txt);
+    font: 600 16px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+  .emo { font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; }
+  [hidden] { display: none !important; }
+
+  /* színválasztó */
+  #pick { min-height: 100vh; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px; justify-content: center; }
+  #pick h1 { margin: 0; text-align: center; color: #facc15; font-size: 32px; letter-spacing: 1px; }
+  #pick p { margin: 4px 0 0; text-align: center; color: var(--mut); }
+  #ease { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .easebtn { padding: 10px 4px; border-radius: 16px; background: var(--card); border: 3px solid transparent; display: flex; flex-direction: column; align-items: center; font-size: 15px; }
+  .easebtn .emo { font-size: 30px; }
+  .easebtn.on { border-color: #facc15; background: #334155; }
+  #roles { display: flex; flex-direction: column; gap: 6px; }
+  .rolebtn { display: flex; align-items: center; gap: 12px; padding: 8px 14px; border-radius: 16px; background: var(--card); border: 3px solid transparent; text-align: left; }
+  .rolebtn .emo { font-size: 30px; }
+  .rolebtn b { display: block; font-size: 18px; }
+  .rolebtn small { color: var(--mut); font-size: 13px; }
+  .rolebtn.on { border-color: #facc15; background: #334155; }
+  .tw { position: relative; }
+  .tw.strong { background: #fef3c7; }
+  .tw .badge { position: absolute; top: -9px; right: 6px; background: #f59e0b; color: #fff; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 10px; }
+  .pickbtn { display: flex; align-items: center; gap: 14px; padding: 10px 18px; border-radius: 20px; font-size: 24px; font-weight: 800; text-align: left; }
+  .pickbtn .emo { font-size: 40px; }
+  .pickbtn small { display: block; font-size: 13px; font-weight: 600; opacity: .85; }
+
+  /* játék */
+  #game { min-height: 100vh; display: flex; flex-direction: column; gap: 10px; padding: 12px 12px 16px; }
+  header { display: flex; align-items: center; justify-content: space-between; background: var(--c); border-radius: 20px; padding: 8px 14px; }
+  header .who { display: flex; align-items: center; gap: 8px; font-size: 21px; font-weight: 900; }
+  header .who .emo { font-size: 34px; }
+  header .gold { font-size: 30px; font-weight: 900; background: rgba(15,23,42,.35); padding: 4px 14px; border-radius: 16px; }
+  #status { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--mut); font-size: 15px; }
+  #msg { text-align: center; font-size: 21px; font-weight: 900; min-height: 28px; color: #facc15; }
+  .bar { height: 10px; background: var(--card); border-radius: 6px; overflow: hidden; flex: 1; }
+  .bar i { display: block; height: 100%; background: #38bdf8; width: 0; transition: width .2s; }
+
+  /* kinek a sávját nézem */
+  #lanes { display: flex; gap: 6px; }
+  .lanebtn { flex: 1; padding: 6px 2px; border-radius: 14px; background: var(--card); border: 3px solid transparent; font-size: 12px; display: flex; flex-direction: column; align-items: center; position: relative; }
+  .lanebtn .emo { font-size: 26px; }
+  .lanebtn.on { background: #334155; }
+  .lanebtn .boss { position: absolute; top: -6px; right: -2px; font-size: 18px; }
+
+  /* radar: mi jön a sávban */
+  #radar { position: relative; height: 52px; background: #d6b37a; border-radius: 16px; overflow: hidden; border: 3px solid var(--lc); }
+  #radar .castle { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); font-size: 30px; }
+  #radar .mob { position: absolute; top: 50%; transform: translate(-50%, -50%) scaleX(-1); font-size: 26px; transition: left .2s linear; }
+  #radar .mob.boss { font-size: 40px; }
+  #radar .next { position: absolute; left: 44px; right: 8px; top: 50%; transform: translateY(-50%); color: #422006; font-size: 15px; font-weight: 800; white-space: nowrap; overflow: hidden; }
+  #radar .next .emo { font-size: 26px; vertical-align: middle; }
+
+  /* toronyhelyek */
+  #slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .slot { aspect-ratio: 1.2; min-width: 0; border-radius: 20px; background: var(--card); border: 3px dashed var(--lc); position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 44px; }
+  .slot.full { border-style: solid; background: var(--soft); }
+  .slot .n { position: absolute; top: 4px; left: 9px; font-size: 15px; color: var(--mut); }
+  .slot.full .n { color: #475569; }
+  .slot .plus { color: var(--lc); font-size: 42px; font-weight: 900; }
+  .slot .st { font-size: 16px; color: #ca8a04; line-height: 1; }
+  .slot:active { transform: scale(.94); }
+  .slot.other:not(.full) { opacity: .35; }
+
+  /* nagy gombok */
+  .big { width: 100%; padding: 18px; border-radius: 22px; font-size: 24px; font-weight: 900; background: #22c55e; color: #052e16; }
+  .big:active { transform: scale(.97); }
+  .big.go { background: #facc15; color: #422006; }
+  .big.bolt { background: #fde047; color: #1e3a8a; animation: glow .6s infinite alternate; }
+  .big.wait { background: var(--card); color: var(--mut); }
+  .big.sos { background: #ef4444; color: #fff; }
+  #nukeBox { display: flex; flex-direction: column; gap: 8px; }
+  .nukebtn { width: 100%; padding: 14px; border-radius: 20px; font-size: 19px; font-weight: 900; background: #1e293b; color: #fde047; border: 3px solid #f59e0b; }
+  .nukebtn:disabled { opacity: .35; }
+  .nukebtn.drop { background: #b45309; color: #fff; font-size: 22px; padding: 18px; }
+  .nukebtn.armed { background: #dc2626; color: #fff; animation: glow .4s infinite alternate; }
+  #wand { width: 100%; padding: 12px; border-radius: 20px; background: #312e81; color: #e0e7ff; font-size: 20px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  #wand .emo { font-size: 30px; }
+  #wand:disabled { opacity: .45; }
+  @keyframes glow { from { box-shadow: 0 0 0 0 #fde04788; } to { box-shadow: 0 0 0 10px #fde04700; } }
+
+  #gifts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .gift { padding: 10px 6px; border-radius: 16px; background: var(--card); border: 3px solid; font-size: 15px; font-weight: 800; }
+  .gift .emo { font-size: 20px; }
+  .gift:disabled { opacity: .35; }
+  .gift.castle { grid-column: 1 / -1; border-color: #facc15; }
+  .label { color: var(--mut); font-size: 13px; margin: 2px 2px -4px; }
+  .switch { background: none; color: var(--mut); font-size: 13px; text-decoration: underline; margin-top: auto; padding: 8px; }
+
+  /* felugró választó */
+  #sheet { position: fixed; inset: 0; background: rgba(2,6,23,.7); display: flex; align-items: flex-end; z-index: 10; }
+  #sheet .box { width: 100%; background: #f8fafc; color: #0f172a; border-radius: 28px 28px 0 0; padding: 18px 14px 26px; }
+  #sheet h2 { margin: 0 0 12px; font-size: 22px; text-align: center; }
+  .towers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tw { padding: 12px 8px; border-radius: 20px; background: #e2e8f0; border: 3px solid transparent; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .tw .emo { font-size: 46px; }
+  .tw b { font-size: 18px; }
+  .tw small { font-size: 12px; color: #475569; }
+  .tw .cost { font-size: 18px; font-weight: 900; color: #a16207; }
+  .tw:disabled { opacity: .35; }
+  .tw:not(:disabled) { border-color: var(--c); }
+  .cancel { width: 100%; margin-top: 12px; padding: 14px; border-radius: 18px; background: #cbd5e1; font-size: 18px; font-weight: 800; color: #0f172a; }
+  .info { text-align: center; }
+  .info .emo { font-size: 72px; }
+  .info .lvl { color: #ca8a04; font-size: 26px; }
+
+  #medal { text-align: center; padding: 14px; border-radius: 22px; background: var(--card); }
+  #medal .emo { font-size: 72px; display: block; }
+  #medal b { font-size: 24px; color: #facc15; }
+
+  /* laptopon: középre, telefon-szélességben, billentyű-súgóval */
+  @media (min-width: 700px) {
+    #pick, #game { max-width: 480px; margin: 0 auto; }
+    #sheet .box { max-width: 520px; margin: 0 auto; }
+    #keys { display: block !important; }
+  }
+  #keys { display: none; color: var(--mut); font-size: 13px; text-align: center; line-height: 1.6; }
+  kbd { background: #334155; color: #f8fafc; border-radius: 6px; padding: 1px 7px; font: 700 12px system-ui, sans-serif; }
+
+  #ver { position: fixed; right: 8px; bottom: 4px; color: #475569; font-size: 11px; z-index: 5; pointer-events: none; }
+  #verWarn { position: fixed; left: 12px; right: 12px; top: 12px; background: #facc15; color: #422006; padding: 12px; border-radius: 16px; text-align: center; z-index: 30; font-weight: 800; }
+  #verWarn button { margin-top: 8px; padding: 10px 18px; border-radius: 12px; background: #422006; color: #fef9c3; font-weight: 900; }
+  #offline { position: fixed; left: 12px; right: 12px; bottom: 12px; background: #7f1d1d; color: #fee2e2; padding: 12px; border-radius: 16px; text-align: center; z-index: 20; }
+</style>
+</head>
+<body>
+<div id="pick">
+  <h1>🏰 VÁRVÉDŐK</h1>
+  <div id="roomBox" hidden style="display:flex;flex-direction:column;gap:12px">
+    <p>Írd be a kivetítőn látható szobakódot:</p>
+    <input id="roomInput" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false"
+      style="font:900 48px system-ui,sans-serif;text-align:center;letter-spacing:12px;text-transform:uppercase;padding:12px;border-radius:20px;border:3px solid #7dd3fc;background:#1e293b;color:#f8fafc">
+    <p id="roomErr" hidden style="color:#fca5a5">4 betű kell.</p>
+    <button class="big go" id="roomGo">Belépek ▶</button>
+  </div>
+  <div id="pickMain" style="display:flex;flex-direction:column;gap:10px">
+    <p>Milyen nehéz legyen neked?</p>
+    <div id="ease"></div>
+    <p>Mi az erősséged? (mindenki mást válasszon!)</p>
+    <div id="roles"></div>
+    <p>Melyik színnel játszol?</p>
+    <div id="pickBtns" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+</div>
+
+<div id="game" hidden>
+  <header><div class="who"><span class="emo" id="whoIcon"></span><span id="whoName"></span></div><div class="gold"><span class="emo">💰</span> <span id="gold">0</span></div></header>
+  <div id="status"><span id="waveTxt"></span><span id="hpTxt"></span></div>
+  <div id="msg"></div>
+  <div id="medal" hidden></div>
+  <div class="label" id="lanesLabel">Kinek a sávja? (a többieknél fejleszteni tudsz)</div>
+  <div id="lanes"></div>
+  <div id="radar"><span class="castle emo">🏰</span><div id="mobs"></div><div class="next" id="next"></div></div>
+  <div id="slots"></div>
+  <button id="wand"></button>
+  <div style="display:flex;align-items:center;gap:8px"><span class="emo">⚡</span><div class="bar"><i id="boltBar"></i></div></div>
+  <div id="action"></div>
+  <div id="nukeBox"></div>
+  <div class="label">Ajándékozz aranyat:</div>
+  <div id="gifts"></div>
+  <div id="keys">Billentyűk: <kbd>1</kbd>-<kbd>6</kbd> hely · a választóban <kbd>1</kbd>-<kbd>6</kbd> torony, <kbd>Enter</kbd> fejlesztés, <kbd>Esc</kbd> bezár<br><kbd>W</kbd> varázspálca · <kbd>Szóköz</kbd> Kész / Villám / Indulás · <kbd>L</kbd> másik sáv · <kbd>K</kbd> kincstár · <kbd>V</kbd> atombomba vétel · <kbd>A</kbd> ledobás (kétszer)</div>
+  <button class="switch" id="switch">Másik szín, erősség vagy nehézség</button>
+</div>
+
+<div id="sheet" hidden><div class="box" id="sheetBox"></div></div>
+<div id="offline" hidden>Nincs kapcsolat a kivetítővel… várunk rá.</div>
+<div id="verWarn" hidden></div>
+<div id="ver"></div>
+
+<script type="module" src="phone.js"></script>
+</body>
+</html>
