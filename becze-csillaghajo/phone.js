@@ -59,7 +59,7 @@ function measure(ack) {
 }
 
 // ---------- állapot a kivetítőtől ----------
-let state = null, lastState = performance.now(), lastHits = null;
+let state = null, lastState = performance.now(), lastHits = null, lastBanner = '';
 net.on((m) => {
   state = m; lastState = performance.now();
   $('offline').hidden = true;
@@ -67,6 +67,8 @@ net.on((m) => {
   if (me && m.ack && m.ack[me] !== undefined) measure(m.ack[me]);
   if (lastHits !== null && m.hits > lastHits) navigator.vibrate?.(120);
   lastHits = m.hits;
+  if (m.banner && !lastBanner) navigator.vibrate?.([120, 60, 120, 60, 200]);   // legyőztük a gonoszt
+  lastBanner = m.banner || '';
   render();
 });
 setInterval(() => { if (performance.now() - lastState > 6000) $('offline').hidden = false; }, 1000);
@@ -147,7 +149,11 @@ function render() {
   $('stickLbl').textContent = st ? st.stick : 'kar';
   $('fireTxt').textContent = st ? st.button.toUpperCase() : 'GOMB';
   $('fire').classList.toggle('off', !st);
-  if (state) $('score').textContent = `⭐ ${state.gold}  🪨 ${state.score}`;
+  if (state) {
+    const b = state.boss;
+    $('score').textContent = state.banner ? `🎉 ${state.banner}`
+      : `${state.level || 1}. szint · ${b ? `👾 ${b.name} ${b.pct}%` : ''} · ⭐ ${state.gold}`;
+  }
 }
 
 // ---------- kar: ahol a hüvelykujj leér, ott a közepe ----------

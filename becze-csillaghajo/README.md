@@ -2,7 +2,17 @@
 
 Közös űrhajó 3-5 játékosnak: a kivetítőn egy hajó, rajta állomások (kormány, ágyúk), mindenki a telefonjával áll be egy állomásra. A teljes terv: [TERV.md](TERV.md).
 
-**Állapot: v0.1.0, kar-próba** (a terv 10. pontjának 1. lépése). Egy hajó, három állomás: 🧭 kormány (kar: merre repüljünk, gomb: turbó), 🔫 ágyú 1 és 2 (kar: célzás, gomb: lövés). Aszteroidák széttörése, csillagok gyűjtése. Kiesés és pálya még nincs.
+**Állapot: v0.2.0, 20 gonosz és fejlődés** (2026-11-17). Egy hajó, három állomás: 🧭 kormány (kar: merre repüljünk, gomb: turbó), 🔫 ágyú 1 és 2 (kar: célzás, gomb: lövés).
+
+## Hogyan megy a játék (v0.2)
+
+- **20 szint, szintenként egy gonosz.** A hajó körül egy nagy nyíl mindig a következő gonosz felé mutat (a képernyő szélén is, ha nem látszik). Messziről a gonosz alszik (Zzz); ahogy közeledünk, kinyitja a szemét, tátja a száját, nő és pirosan izzik, a képernyő széle is pirosra vált.
+- **Mindig le lehet győzni.** A gonosz lassú, megáll egy tisztes távolságban, és nincs kiesés: a nyálgolyója és a kis ellenségek csak meglökik a hajót. Az ereje a hajó akkori fegyveréhez igazodik: két ágyússal az 1. szinten kb. 15-20 mp, a 20.-on kb. 40-45 mp (szimulációval mérve, odarepüléssel együtt).
+- **Kisebb ellenségek** három méretben (kicsi, közepes, nagy), a gonosz körül; a 6. szinttől a gonosz újakat is szül.
+- **Minden legyőzött gonosz után fejlődés**, sorban: fegyver (Kavicsvető, Gyorstüzelő, Dupla ágyú, Lézer, Hármas lézer, Rakéták, Plazmaágyú, Csillagvihar), pajzs (Buborék, Erőtér, Kristály, Csillag; magától véd és tölt vissza), hajtómű (Pöfögő, Kerozinos, Ion, Fúziós, Hiper), hajótest (Bádogteknő, Uszonyos, Nyílhegy, Szárnyas vadász, Csillagcirkáló). Az elején a hajó lassú és a fegyver primitív.
+- A 20. gonosz után: „Megmentettétek a csillagködöt!”, utána a kör a legerősebb gonoszokkal folytatódik.
+- A sorrend, a nevek és a számok a `rules.js`-ben vannak (`BOSSES`, `WEAPONS`, `SHIELDS`, `ENGINES`, `HULLS`, `bossStats`).
+- Próbához a kivetítő konzoljában: `__ship.go(12)` a 12. szintre ugrik, `__ship.near()` a gonosz mellé teszi a hajót, `__ship.win()` legyőzi a mostanit.
 
 ## Játék élesben
 
