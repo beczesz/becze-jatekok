@@ -103,12 +103,14 @@ async function choose(p) {
   $('meIcon').textContent = M.icon; $('meName').textContent = M.name;
   $('skill').textContent = M.skill;
   $('fireTxt').innerHTML = {
-    1: 'UGRÁS<br><small>aki rajtad áll, felröpül</small>',
-    2: 'UGRÁS<br><small>a levegőben is, újra és újra</small>',
+    1: 'UGRÁS<br><small>kötélen: elengedés</small>',
+    2: 'UGRÁS<br><small>legfeljebb ötöt</small>',
     3: 'REPÜLÉS<br><small>tartsd nyomva</small>',
     4: 'UGRÁS',
   }[p];
-  $('vine').hidden = p !== 4;
+  // második gomb: Kavicsnál a kötélnyíl (a kar iránya a célzás), Indásnál az inda
+  $('vine').hidden = !(p === 1 || p === 4);
+  $('vineTxt').innerHTML = p === 1 ? '🏹 NYÍL<br><small>a kar felé lő</small>' : '🌱 INDA';
   $('pick').hidden = true; $('game').hidden = false;
   render();
 }
@@ -172,7 +174,7 @@ fire.addEventListener('pointerup', () => press(false));
 fire.addEventListener('pointercancel', () => press(false));
 fire.addEventListener('contextmenu', (e) => e.preventDefault());
 
-// Indás második gombja: inda (a magnál a mag)
+// a második gomb: Kavicsnál NYÍL, Indásnál INDA (a magnál a mag)
 const vine = $('vine');
 const vinePress = (v) => { if (pad.k === v) return; pad.k = v; vine.classList.toggle('on', v); if (v) navigator.vibrate?.(25); sendPad(false); };
 vine.addEventListener('pointerdown', (e) => { vine.setPointerCapture(e.pointerId); vinePress(true); });

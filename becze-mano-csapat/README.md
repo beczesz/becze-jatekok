@@ -8,27 +8,30 @@ Közös ügyességi és fejtörő játék pontosan négy játékosnak: a kivetí
 
 | Manó | Mit tud |
 |---|---|
-| 🗿 **Kavics** | Nehéz: csak ő nyomja le a nagy (💪) gombot, alatta beszakad a repedt kő, és csak ő tolja a vasládát. Ha valaki a fején áll és ő ugrik, magasra röpíti; ha mindenki rajta áll, tűzijáték: mindenki szétrepül. |
-| 🐭 **Fürge** | Kicsi: csak ő fér át a rácson. A levegőben is ugrik, újra és újra, így bármilyen magasra feljut. |
-| 🚁 **Kopter** (v0.1-ben Lufi) | Helikopter: nyomva tartott gombbal emelkedik, bármeddig; elengedve lassan ereszkedik. Aki a levegőben az aljához ér, belekapaszkodik (a kapaszkodóba is lehet kapaszkodni), a Kopter viszi; ugrással le lehet ugrani, kar lefelé elenged. |
-| 🌱 **Indás** | Külön INDA gombja van: bárhol indát növeszt egészen fel a plafonig (azon mindenki fel-le mászik); 30 mp után elsorvad, egyszerre legfeljebb 3 él. A magnál a magot növeszti (híd a tüskék fölé). |
+| 🗿 **Kavics** | Nehéz: csak ő nyomja le a nagy (💪) gombot, alatta beszakad a repedt kő, csak ő tolja a vasládát, és a Kopter nem bírja el. A NYÍL gomb kötelet lő (a kar irányába): ahol megakad, ott lóg, leng mint egy inga, fel-le mászik rajta, újabb nyíllal továbblendül, ugrással elenged. Ha legalább ketten állnak rajta és ugrik: tűzijáték. |
+| 🐭 **Fürge** | Kicsi: csak ő fér át a rácson. A levegőben is ugrik, de öt ugrás után elfárad, amíg le nem ér. |
+| 🚁 **Kopter** | Helikopter: nyomva tartott gombbal emelkedik. Egyedül csak a pálya tetejéig, kapaszkodókkal az égig. Aki a levegőben az aljához ér, belekapaszkodik (a kapaszkodóba is lehet); a tetejére állót a propeller ledobja. Fent az égben ha valaki elenged, az egész lánc lezuhan. |
+| 🌱 **Indás** | INDA gomb: bárhol indát növeszt, ami falig (az égi pályákon a végtelenségig) nő felfelé; 30 mp után elsorvad, meglévő indán újra megnyomva megújul. A magnál hidat is. |
 
-Mindenkire igaz: egymás fejére lehet állni; a kar lefelé húzása a karnál átbillenti a kart; a tüske és a leesés csak visszavisz a rajthoz, nincs büntetés.
+Mindenkire igaz: egymás fejére lehet állni (a Kopterére nem); a kart elég megérinteni, és úgy marad; a tüske és a leesés csak visszavisz a rajthoz, nincs büntetés.
 
-## A tíz pálya
+**Az ég (v0.3):** az égi pályák teteje nyitott. Fent felhők (rá lehet állni), madarak, hőlégballon, sárkány (bele lehet kapaszkodni, felvisz), bagoly, égi csillagok, és magasabban szivárvány, ufó, Hold és a Csillagkapu. A kamera követi, aki felmegy, a lent maradók a kép szélén látszanak.
+
+## A tíz pálya (v0.3)
 
 | # | Név | A feladat |
 |---|---|---|
-| 1 | Kapunyitó | Valaki a gombon áll, a többiek átmennek; a túloldali gombon álló engedi át az utolsót. |
-| 2 | Kavics ereje | Kavics beszakítja a repedt követ, lent a nagy gombot csak ő nyomja le. |
-| 3 | A rács titka | A kaput nyitó gomb rács mögött van: Fürge megy be. |
-| 4 | Fent a kar | A kar magasan van: a Kopter felrepül vagy Fürge felugrál, és lehúzza. |
-| 5 | Indás kertje | Inda a magas falra, híd a tüskék fölé. |
-| 6 | Kopter-lift | A fal túl magas: a Kopter felviszi a többieket (kapaszkodva vagy a tetején), vagy Kavics felröpíti őket; aki utoljára marad a gombon, egyedül is feljut. |
-| 7 | Ládatologatás | A ládát a gödörbe kell tolni, a gombra; a vasládát csak Kavics bírja. |
-| 8 | Két gomb egyszerre | A kapu csak két egyszerre lenyomott gombtól nyílik, az egyik rács mögött. |
-| 9 | Tüskés völgy | Híd a völgy fölé, a Kopter lehúzza a kart, inda a magasba. |
-| 10 | A nagy kaland | Mindegyik képesség kell, sorban: nehéz gomb, inda, híd, magas kar, rács alatti gomb. |
+| 1 | Kapaszkodj! | Égi pálya. Magas fal a kijárat előtt: Kopter-lánc vagy inda. |
+| 2 | Fürge öt ugrása | A kapu karja rácsos kalitkában, magasan: Fürge felugrál és beér. |
+| 3 | Kavics kötele | Tüskés völgy kampókkal: Kavics kötélen átleng és megérinti a kart, a többieket a Kopter-lánc viszi át. |
+| 4 | Égig érő inda | Égi pálya. A kijárat egy magas fennsíkon: inda vagy Kopter-lánc. |
+| 5 | Gödör és rács | Fürge a rácsos gombra, Kavics a gödörbeli nagy gombra; bent a kar nyitva tartja a kapukat. |
+| 6 | Felhő-sziget | Égi pálya. A kijárat egy lebegő szigeten. |
+| 7 | Kar a magasban | Két gomb egyszerre (az egyik nehéz), bent fent a kar: a Kopter vagy Fürge érinti meg. |
+| 8 | Két párkány | Két magas párkányon egy-egy gomb egyszerre, bent a kar. |
+| 9 | Kavics a párkányon | A nehéz gomb és Kavics kijárata fent a párkányon: kötél vagy inda. |
+| 10 | Égi nagy kaland | Égi pálya. Mindenki kijárata máshol: magas sziget (Kopter), oszlop teteje (Fürge), sziget (Kavics), a túloldal (Indás). |
+
 
 A pályák a `levels.js`-ben vannak, szöveges rajzként (30 × 16 jel); a fájl elején a jelek magyarázata. Új pályához elég egy új rajz.
 

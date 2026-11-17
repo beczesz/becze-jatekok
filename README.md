@@ -8,7 +8,7 @@ Családi játékok, amiket a gyerekekkel együtt játszunk: a kivetítőn fut a 
 |---|---|---|
 | [Becze Család Defender](becze-csalad-defender/) | Közös toronyvédő 3-5 játékosnak: egy vár, sávonként egy játékos, átlövés a testvér sávjába, szerepek, 8 fejlesztési szint, atombomba | https://varvedok-jatek.web.app/screen.html |
 | [Becze Csillaghajó](becze-csillaghajo/) | Közös űrhajó 3-5 játékosnak: 6 állomás (kormány, pajzs, ágyúk, szerelő), mindig kevesebb kéz, mint feladat, csillagbébik mentése ([terv](becze-csillaghajo/TERV.md)). **Most: v0.3.0, 20 gonosz, a hajó fejlődik, 4. állomás: rakéta** | https://becze-csillaghajo.web.app/screen.html |
-| [Becze Manó-csapat](becze-mano-csapat/) | Közös ügyességi és fejtörő játék pontosan 4 játékosnak: négy manó (felröpítő Kavics, többet ugró Fürge, helikopter Kopter, indanövesztő Indás), mindenki mást tud, minden pálya egy közös feladat. **Most: v0.2.0, 10 pálya** | https://becze-mano-csapat.web.app/screen.html |
+| [Becze Manó-csapat](becze-mano-csapat/) | Közös ügyességi és fejtörő játék pontosan 4 játékosnak: négy manó (kötélnyilas Kavics, ötöt ugró Fürge, helikopter Kopter, égig érő indát növesztő Indás), végtelen ég meglepetésekkel, minden pálya egy közös feladat. **Most: v0.3.0, 10 új pálya** | https://becze-mano-csapat.web.app/screen.html |
 
 Új játék új mappába kerül, a saját README-jével.
 
