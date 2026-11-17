@@ -8,6 +8,7 @@ Családi játékok, amiket a gyerekekkel együtt játszunk: a kivetítőn fut a 
 |---|---|---|
 | [Becze Család Defender](becze-csalad-defender/) | Közös toronyvédő 3-5 játékosnak: egy vár, sávonként egy játékos, átlövés a testvér sávjába, szerepek, 8 fejlesztési szint, atombomba | https://varvedok-jatek.web.app/screen.html |
 | [Becze Csillaghajó](becze-csillaghajo/) | Közös űrhajó 3-5 játékosnak: 6 állomás (kormány, pajzs, ágyúk, szerelő), mindig kevesebb kéz, mint feladat, csillagbébik mentése ([terv](becze-csillaghajo/TERV.md)). **Most: v0.2.0, 20 gonosz, a hajó fejlődik** | https://becze-csillaghajo.web.app/screen.html |
+| [Becze Manó-csapat](becze-mano-csapat/) | Közös ügyességi és fejtörő játék pontosan 4 játékosnak: négy manó (nehéz, kicsi, lebegő, indanövesztő), mindenki mást tud, minden pálya egy közös feladat. **Most: v0.1.0, 10 pálya** | https://becze-mano-csapat.web.app/screen.html |
 
 Új játék új mappába kerül, a saját README-jével.
 
@@ -25,4 +26,6 @@ Egy Firebase-projekt (`varvedok-jatek`) szolgálja ki mindet: közös adatbázis
 NO_UPDATE_NOTIFIER=1 npx -y firebase-tools@15 deploy --only hosting:<cél>,database --project varvedok-jatek
 ```
 
-Célpontok: `defender` (varvedok-jatek.web.app), `csillaghajo` (becze-csillaghajo.web.app).
+Célpontok: `defender` (varvedok-jatek.web.app), `csillaghajo` (becze-csillaghajo.web.app), `mano` (becze-mano-csapat.web.app).
+
+A projekt az exarlabs-os Google-fiókhoz tartozik. Ha a gépen más fiók van bejelentkezve a Firebase CLI-be, a parancs végére: `--account <az a fiók>` (a `firebase login:list` mutatja, melyik van bent).

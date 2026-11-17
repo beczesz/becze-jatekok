@@ -5,8 +5,15 @@
   "targets": {
     "varvedok-jatek": {
       "hosting": {
-        "defender": ["varvedok-jatek"],
-        "csillaghajo": ["becze-csillaghajo"]
+        "defender": [
+          "varvedok-jatek"
+        ],
+        "csillaghajo": [
+          "becze-csillaghajo"
+        ],
+        "mano": [
+          "becze-mano-csapat"
+        ]
       }
     }
   }

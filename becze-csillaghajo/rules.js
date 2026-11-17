@@ -29,7 +29,7 @@ export const PAD_GONE_MS = 8000;        // ennyi csend után a kivetítő elenge
 // cd: két lövés között (mp), shots: egyszerre hány lövedék, spread: legyező szöge, par: párhuzamos távolság,
 // homing: mennyire fordul a cél felé (0: egyenesen megy).
 export const WEAPONS = [
-  { name: 'Kavicsvető',   icon: '🪨', cd: 0.55, dmg: 1,  speed: 650,  shots: 1, spread: 0,    par: 0,  size: 9,  kind: 'ball',   homing: 0 },
+  { name: 'Kavicsvető',   icon: '🥌', cd: 0.55, dmg: 1,  speed: 650,  shots: 1, spread: 0,    par: 0,  size: 9,  kind: 'ball',   homing: 0 },
   { name: 'Gyorstüzelő',  icon: '🔫', cd: 0.32, dmg: 1,  speed: 800,  shots: 1, spread: 0,    par: 0,  size: 8,  kind: 'ball',   homing: 0 },
   { name: 'Dupla ágyú',   icon: '🔫', cd: 0.30, dmg: 1.5, speed: 850, shots: 2, spread: 0,    par: 14, size: 8,  kind: 'ball',   homing: 0 },
   { name: 'Lézer',        icon: '🔦', cd: 0.20, dmg: 2.5, speed: 1300, shots: 2, spread: 0,   par: 14, size: 6,  kind: 'laser',  homing: 0 },

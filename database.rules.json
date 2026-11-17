@@ -19,16 +19,36 @@
           "$id": {
             ".write": "auth != null && root.child('rooms').child($room).child('host').exists() && ((!data.exists() && newData.exists()) || root.child('rooms').child($room).child('host').val() === auth.uid)",
             ".validate": "newData.hasChildren(['p', 'type', 'uid']) && newData.child('uid').val() === auth.uid",
-            "p": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5" },
-            "type": { ".validate": "newData.isString() && newData.val().length <= 12" },
-            "uid": { ".validate": "newData.isString()" },
-            "slot": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5" },
-            "lane": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5" },
-            "to": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5" },
-            "tower": { ".validate": "newData.isString() && newData.val().length <= 8" },
-            "ease": { ".validate": "newData.isString() && newData.val().length <= 8" },
-            "role": { ".validate": "newData.isString() && newData.val().length <= 10" },
-            "$other": { ".validate": false }
+            "p": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5"
+            },
+            "type": {
+              ".validate": "newData.isString() && newData.val().length <= 12"
+            },
+            "uid": {
+              ".validate": "newData.isString()"
+            },
+            "slot": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5"
+            },
+            "lane": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5"
+            },
+            "to": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 5"
+            },
+            "tower": {
+              ".validate": "newData.isString() && newData.val().length <= 8"
+            },
+            "ease": {
+              ".validate": "newData.isString() && newData.val().length <= 8"
+            },
+            "role": {
+              ".validate": "newData.isString() && newData.val().length <= 10"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         }
       }
@@ -50,15 +70,81 @@
           "$p": {
             ".write": "auth != null && $p.matches(/^[1-5]$/) && root.child('ship').child($room).child('host').exists() && (!data.exists() || data.child('uid').val() === auth.uid || data.child('t').val() < now - 15000 || (!newData.exists() && root.child('ship').child($room).child('host').val() === auth.uid))",
             ".validate": "newData.hasChildren(['uid', 't', 'x', 'y', 'b', 's', 'st']) && newData.child('uid').val() === auth.uid",
-            "uid": { ".validate": "newData.isString()" },
-            "t": { ".validate": "newData.val() === now" },
-            "x": { ".validate": "newData.isNumber() && newData.val() >= -1 && newData.val() <= 1" },
-            "y": { ".validate": "newData.isNumber() && newData.val() >= -1 && newData.val() <= 1" },
-            "b": { ".validate": "newData.isBoolean()" },
-            "s": { ".validate": "newData.isNumber()" },
-            "r": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 60000" },
-            "st": { ".validate": "newData.isString() && newData.val().length <= 8" },
-            "$other": { ".validate": false }
+            "uid": {
+              ".validate": "newData.isString()"
+            },
+            "t": {
+              ".validate": "newData.val() === now"
+            },
+            "x": {
+              ".validate": "newData.isNumber() && newData.val() >= -1 && newData.val() <= 1"
+            },
+            "y": {
+              ".validate": "newData.isNumber() && newData.val() >= -1 && newData.val() <= 1"
+            },
+            "b": {
+              ".validate": "newData.isBoolean()"
+            },
+            "s": {
+              ".validate": "newData.isNumber()"
+            },
+            "r": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 60000"
+            },
+            "st": {
+              ".validate": "newData.isString() && newData.val().length <= 8"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    },
+    "mano": {
+      "$room": {
+        "host": {
+          ".read": "auth != null",
+          ".write": "auth != null && $room.matches(/^[A-Z]{4}$/) && (!data.exists() || data.val() === auth.uid)",
+          ".validate": "newData.isString() && newData.val() === auth.uid"
+        },
+        "state": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('mano').child($room).child('host').val() === auth.uid",
+          ".validate": "newData.isString() && newData.val().length < 30000"
+        },
+        "pads": {
+          ".read": "auth != null && root.child('mano').child($room).child('host').val() === auth.uid",
+          "$p": {
+            ".write": "auth != null && $p.matches(/^[1-5]$/) && root.child('mano').child($room).child('host').exists() && (!data.exists() || data.child('uid').val() === auth.uid || data.child('t').val() < now - 15000 || (!newData.exists() && root.child('mano').child($room).child('host').val() === auth.uid))",
+            ".validate": "newData.hasChildren(['uid', 't', 'x', 'y', 'b', 's', 'st']) && newData.child('uid').val() === auth.uid",
+            "uid": {
+              ".validate": "newData.isString()"
+            },
+            "t": {
+              ".validate": "newData.val() === now"
+            },
+            "x": {
+              ".validate": "newData.isNumber() && newData.val() >= -1 && newData.val() <= 1"
+            },
+            "y": {
+              ".validate": "newData.isNumber() && newData.val() >= -1 && newData.val() <= 1"
+            },
+            "b": {
+              ".validate": "newData.isBoolean()"
+            },
+            "s": {
+              ".validate": "newData.isNumber()"
+            },
+            "r": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 60000"
+            },
+            "st": {
+              ".validate": "newData.isString() && newData.val().length <= 8"
+            },
+            "$other": {
+              ".validate": false
+            }
           }
         }
       }

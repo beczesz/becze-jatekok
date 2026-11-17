@@ -23,6 +23,14 @@
       "headers": [
         { "source": "**/*.@(js|css|html)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
       ]
+    },
+    {
+      "target": "mano",
+      "public": "becze-mano-csapat",
+      "ignore": ["README.md", "proba-robot.js", "**/.*"],
+      "headers": [
+        { "source": "**/*.@(js|css|html)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+      ]
     }
   ]
 }
