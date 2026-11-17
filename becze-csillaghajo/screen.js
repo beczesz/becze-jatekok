@@ -3,7 +3,7 @@
 import { connectScreen } from './transport.js';
 import {
   VERSION, PLAYERS, PLAYER_IDS, STATIONS, STATION_IDS, PAD_GONE_MS,
-  WEAPONS, SHIELDS, ENGINES, HULLS, GEAR, GEAR_LABEL, BOSSES, LEVELS, gearAt, bossStats,
+  WEAPONS, SHIELDS, ENGINES, HULLS, GEAR, GEAR_LABEL, BOSSES, LEVELS, gearAt, bossStats, weaponDps, ROCKET,
 } from './rules.js';
 
 const cv = document.getElementById('c');
@@ -52,6 +52,7 @@ const S = {
   stations: Object.fromEntries(STATION_IDS.map((id) => [id, 0])),
   ship: { x: 0, y: 0, vx: 0, vy: 0, ang: 0, turbo: 0, turboCd: 0, flash: 0, hitCd: 0, glow: 0 },
   guns: { gun1: { aim: -Math.PI / 2, cd: 0 }, gun2: { aim: Math.PI / 2, cd: 0 } },
+  rocket: { aim: Math.PI, load: 1, kick: 0 }, rockets: [], shake: 0,
   gear: { weapon: 0, shield: 0, engine: 0, hull: 0 },
   shield: { charge: 0, t: 0, flash: 0 },
   level: 1, boss: null, phase: 'fight', phaseT: 0, banner: null,
@@ -151,11 +152,35 @@ function hitShip(x, y, push) {
   return false;
 }
 
-function nearestTarget(x, y) {   // a célkövető lövedéknek
+function nearestTarget(x, y, bossFirst) {   // a célkövető lövedéknek; a rakéta a gonoszt szereti a legjobban
+  if (bossFirst && S.boss && S.phase === 'fight' && Math.hypot(S.boss.x - x, S.boss.y - y) < 1500) return S.boss;
   let best = null, bd = 900;
   const cands = S.boss && S.phase === 'fight' ? [S.boss, ...S.minions] : S.minions;
   for (const t of cands) { const d = Math.hypot(t.x - x, t.y - y) - (t.r || 0); if (d < bd) { bd = d; best = t; } }
   return best;
+}
+
+// rakéta: a hajó hátuljáról indul a célzás irányába, lassan, aztán gyorsul és ráfordul a célra
+function launchRocket(RK) {
+  const [x, y] = stationWorld('rocket'), sh = S.ship;
+  const color = PLAYERS[S.stations.rocket].color;
+  S.rockets.push({ x: x + Math.cos(RK.aim) * 40, y: y + Math.sin(RK.aim) * 40, a: RK.aim, speed: ROCKET.speed0, vx: sh.vx, vy: sh.vy, t: 0, life: ROCKET.life, color });
+  RK.load = 0; RK.kick = 0.25;
+  burst(x + Math.cos(RK.aim) * 50, y + Math.sin(RK.aim) * 50, '#fde047', 16, 260);
+}
+// robbanás: a körében mindent sebez (gonosz, kicsik, aszteroidák, nyálgolyók); a hajónak nem árt
+function explode(r) {
+  r.done = true;
+  const R = ROCKET.radius, dmg = Math.max(6, weaponDps(S.gear.weapon) * ROCKET.dmgK);
+  for (const [c, n, v] of [['#ffffff', 30, 300], ['#fde047', 40, 520], ['#fb923c', 40, 620], [r.color, 30, 450]]) burst(r.x, r.y, c, n, v);
+  S.booms = S.booms || []; S.booms.push({ x: r.x, y: r.y, t: 0 });
+  S.shake = 0.35;
+  const B = S.boss;
+  if (B && Math.hypot(B.x - r.x, B.y - r.y) < R + B.r) { B.hp -= dmg; B.hurt = 0.3; if (B.hp <= 0) defeatBoss(); }
+  for (const m of S.minions) if (Math.hypot(m.x - r.x, m.y - r.y) < R + m.r) { m.hp -= dmg; m.hurt = 0.2; if (m.hp <= 0) { S.kills++; S.gold++; burst(m.x, m.y, m.color, 22, 340); } }
+  S.minions = S.minions.filter((m) => m.hp > 0);
+  for (const k of S.rocks) if (Math.hypot(k.x - r.x, k.y - r.y) < R + k.r) { burst(k.x, k.y, '#cbd5e1', 18, 340); Object.assign(k, newRock(true)); }
+  for (const s of S.spits) if (Math.hypot(s.x - r.x, s.y - r.y) < R + s.r) { s.life = 0; burst(s.x, s.y, s.color, 10, 200); }
 }
 
 function fire(id, g, P) {
@@ -225,6 +250,32 @@ function update(dt) {
     }
     if (P.b && g.cd <= 0) { g.cd = WEAPONS[S.gear.weapon].cd; fire(id, g, P); }
   }
+
+  // rakétás: a kar a célzás, a gomb kilövi, ha töltve van; utána újratölt
+  const RK = S.rocket, RP = S.stations.rocket ? S.players[S.stations.rocket] : null;
+  const reload = Math.max(ROCKET.reloadMin, ROCKET.reload - S.gear.weapon * 0.15);
+  RK.load = Math.min(1, RK.load + dt / reload); RK.kick = Math.max(0, RK.kick - dt);
+  if (RP) {
+    if (Math.hypot(RP.x, RP.y) > 0.3) { const d = angDiff(RK.aim, Math.atan2(RP.y, RP.x)); RK.aim += Math.sign(d) * Math.min(Math.abs(d), 8 * dt); }
+    if (RP.b && !RP.prevB && RK.load >= 1) launchRocket(RK);
+    RP.prevB = RP.b;
+  }
+  for (const r of S.rockets) {
+    r.t += dt; r.life -= dt;
+    r.speed = Math.min(ROCKET.speedMax, r.speed + ROCKET.acc * dt);
+    const tg = r.t > 0.25 ? nearestTarget(r.x, r.y, true) : null;
+    if (tg) r.a += Math.max(-ROCKET.turn * dt, Math.min(ROCKET.turn * dt, angDiff(r.a, Math.atan2(tg.y - r.y, tg.x - r.x))));
+    r.x += Math.cos(r.a) * r.speed * dt + r.vx * dt; r.y += Math.sin(r.a) * r.speed * dt + r.vy * dt;
+    r.vx *= 0.97; r.vy *= 0.97;
+    if (Math.random() < 0.9) S.parts.push({ x: r.x - Math.cos(r.a) * 26, y: r.y - Math.sin(r.a) * 26, vx: -Math.cos(r.a) * 120 + rnd(-40, 40), vy: -Math.sin(r.a) * 120 + rnd(-40, 40), life: rnd(.25, .5), color: Math.random() < .5 ? '#fb923c' : '#fde047' });
+    const touch = (S.boss && Math.hypot(S.boss.x - r.x, S.boss.y - r.y) < S.boss.r * 0.9 + 16)
+      || S.minions.some((m) => Math.hypot(m.x - r.x, m.y - r.y) < m.r + 16)
+      || S.rocks.some((k) => Math.hypot(k.x - r.x, k.y - r.y) < k.r + 10)
+      || S.spits.some((s) => Math.hypot(s.x - r.x, s.y - r.y) < s.r + 14);
+    if (touch || r.life <= 0) explode(r);
+  }
+  S.rockets = S.rockets.filter((r) => !r.done);
+  S.shake = Math.max(0, S.shake - dt);
 
   // lövedékek (a célkövetők lágyan fordulnak)
   for (const b of S.bullets) {
@@ -620,6 +671,18 @@ function drawShip() {
     else { ctx.beginPath(); ctx.roundRect(0, -barrelW / 2, barrelL, barrelW, 6); ctx.fill(); ctx.stroke(); }
     ctx.restore();
   }
+  // rakétavető: vastag cső, benne a töltött rakéta orra; körülötte a töltődés íve
+  {
+    const [rx, ry] = stationWorld('rocket'), RK = S.rocket, p = S.stations.rocket;
+    ctx.save(); ctx.translate(rx, ry); ctx.rotate(RK.aim);
+    ctx.translate(-RK.kick * 40, 0);
+    ctx.fillStyle = p ? PLAYERS[p].color : '#475569'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.roundRect(0, -15, 62, 30, 8); ctx.fill(); ctx.stroke();
+    if (RK.load >= 1) { ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.moveTo(62, -9); ctx.lineTo(80, 0); ctx.lineTo(62, 9); ctx.fill(); }
+    ctx.restore();
+    ctx.strokeStyle = RK.load >= 1 ? '#fde047' : 'rgba(253,224,71,.5)'; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.arc(rx, ry, 32, -Math.PI / 2, -Math.PI / 2 + RK.load * Math.PI * 2); ctx.stroke();
+  }
   // pajzs
   const SH = SHIELDS[S.gear.shield];
   if (SH.charge) {
@@ -772,13 +835,30 @@ function draw() {
   neb.addColorStop(0, 'rgba(126,34,206,.25)'); neb.addColorStop(1, 'rgba(2,6,23,0)');
   ctx.fillStyle = neb; ctx.fillRect(0, 0, W, H);
   bgStars();
-  ctx.save(); ctx.translate(W / 2 - cam.x, H / 2 - cam.y);
+  const sk = S.shake * 40;
+  ctx.save(); ctx.translate(W / 2 - cam.x + rnd(-sk, sk), H / 2 - cam.y + rnd(-sk, sk));
   for (const st of S.stars) drawStar(st);
   for (const r of S.rocks) drawRock(r);
   if (S.boss) drawBoss(S.boss);
   for (const m of S.minions) drawMinion(m);
   for (const s of S.spits) drawSpit(s);
   for (const b of S.bullets) drawBullet(b);
+  // rakéták és robbanások
+  for (const r of S.rockets) {
+    ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.a);
+    ctx.fillStyle = '#e2e8f0'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.roundRect(-24, -9, 40, 18, 6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.moveTo(16, -9); ctx.lineTo(32, 0); ctx.lineTo(16, 9); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = r.color; for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(-24, s * 9); ctx.lineTo(-34, s * 20); ctx.lineTo(-14, s * 9); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = `rgba(251,146,60,${0.6 + 0.4 * Math.random()})`; ctx.beginPath(); ctx.moveTo(-24, -6); ctx.lineTo(-44 - Math.random() * 18, 0); ctx.lineTo(-24, 6); ctx.fill();
+    ctx.restore();
+  }
+  S.booms = (S.booms || []).filter((b) => (b.t += 1 / 60) < 0.5);
+  for (const b of S.booms) {
+    const k = b.t / 0.5;
+    ctx.fillStyle = `rgba(253,224,71,${0.5 * (1 - k)})`; ctx.beginPath(); ctx.arc(b.x, b.y, ROCKET.radius * (0.4 + k), 0, 7); ctx.fill();
+    ctx.strokeStyle = `rgba(255,255,255,${1 - k})`; ctx.lineWidth = 8 * (1 - k) + 1; ctx.beginPath(); ctx.arc(b.x, b.y, ROCKET.radius * (0.5 + k * 0.9), 0, 7); ctx.stroke();
+  }
   drawShip();
   if (S.boss) drawBossLabel(S.boss);
   const arrow = bossArrow();
@@ -797,7 +877,7 @@ function broadcast() {
     stations: S.stations,
     players: Object.fromEntries(PLAYER_IDS.filter((p) => S.players[p].joined).map((p) => [p, S.players[p].st])),
     ack: Object.fromEntries(PLAYER_IDS.filter((p) => S.players[p].joined).map((p) => [p, S.players[p].s])),
-    gold: S.gold, score: S.kills, hits: S.hits,
+    gold: S.gold, score: S.kills, hits: S.hits, rocket: Math.round(S.rocket.load * 20) / 20,
     level: Math.min(S.level, LEVELS), levels: LEVELS,
     boss: B ? { name: B.name, pct: Math.max(0, Math.round(B.hp / B.max * 100)), near: Math.round(B.scary * 100) / 100 } : null,
     gear: { weapon: WEAPONS[S.gear.weapon].name, shield: SHIELDS[S.gear.shield].name, engine: ENGINES[S.gear.engine].name, hull: HULLS[S.gear.hull].name },

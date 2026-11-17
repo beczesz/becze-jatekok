@@ -1,5 +1,5 @@
 // Becze Csillaghajó: közös számok és nevek (a kivetítő és a telefon is ezt tölti be).
-export const VERSION = '0.2.0';
+export const VERSION = '0.3.0';
 
 export const PLAYERS = {
   1: { name: 'Piros', color: '#ef4444', soft: '#fee2e2', icon: '🦊' },
@@ -10,14 +10,19 @@ export const PLAYERS = {
 };
 export const PLAYER_IDS = [1, 2, 3, 4, 5];
 
-// Állomások. Most három van; a többi (pajzs-állomás, nagyágyú, szerelő) később jön.
+// Állomások. Négy van: kormány, két ágyú és a rakétás (v0.3); a többi (pajzs, szerelő) később jöhet.
 // pos: hol ül a hajón (a hajó saját koordinátáiban, a hajó orra +x irányba néz)
 export const STATIONS = {
   helm: { name: 'Kormány', icon: '🧭', pos: [38, 0], stick: 'merre repüljünk', button: 'turbó' },
   gun1: { name: 'Ágyú 1', icon: '🔫', pos: [-22, -52], stick: 'célzás', button: 'lövés' },
   gun2: { name: 'Ágyú 2', icon: '🔫', pos: [-22, 52], stick: 'célzás', button: 'lövés' },
+  rocket: { name: 'Rakéta', icon: '🚀', pos: [-64, 0], stick: 'célzás', button: 'rakéta' },
 };
-export const STATION_IDS = ['helm', 'gun1', 'gun2'];
+export const STATION_IDS = ['helm', 'gun1', 'gun2', 'rocket'];
+
+// A rakétás: lassan induló, gyorsuló, célkövető nagy rakéta; robbanáskor mindent sebez a körében.
+// reload: újratöltés (mp), a fegyver szintjével rövidül; dmgK: sebzés = ennyiszer a fegyver mp-enkénti sebzése.
+export const ROCKET = { reload: 3.2, reloadMin: 1.6, speed0: 220, speedMax: 950, acc: 1100, turn: 3.4, life: 4.5, radius: 160, dmgK: 3 };
 
 // A vezérlő-rekord küldése: legfeljebb ennyi ms-onként, és csak ha változott.
 export const PAD_MS = 100;

@@ -145,7 +145,8 @@ function render() {
     b.querySelector('.occ').textContent = holder && holder !== me ? PLAYERS[holder].icon : '';
   }
   const st = STATIONS[mineNow];
-  $('hint').textContent = st ? `Kar: ${st.stick} · Gomb: ${st.button}` : (pad.st ? 'Szaladsz…' : 'Válassz állomást!');
+  const load = mineNow === 'rocket' && state && state.rocket !== undefined ? (state.rocket >= 1 ? ' · 🚀 KÉSZ!' : ` · töltődik ${Math.round(state.rocket * 100)}%`) : '';
+  $('hint').textContent = st ? `Kar: ${st.stick} · Gomb: ${st.button}${load}` : (pad.st ? 'Szaladsz…' : 'Válassz állomást!');
   $('stickLbl').textContent = st ? st.stick : 'kar';
   $('fireTxt').textContent = st ? st.button.toUpperCase() : 'GOMB';
   $('fire').classList.toggle('off', !st);

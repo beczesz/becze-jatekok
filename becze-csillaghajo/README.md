@@ -1,8 +1,8 @@
 # Becze Csillaghajó
 
-Közös űrhajó 3-5 játékosnak: a kivetítőn egy hajó, rajta állomások (kormány, ágyúk), mindenki a telefonjával áll be egy állomásra. A teljes terv: [TERV.md](TERV.md).
+Közös űrhajó 3-5 játékosnak: a kivetítőn egy hajó, rajta állomások (kormány, ágyúk, rakéta), mindenki a telefonjával áll be egy állomásra. A teljes terv: [TERV.md](TERV.md).
 
-**Állapot: v0.2.0, 20 gonosz és fejlődés** (2026-11-17). Egy hajó, három állomás: 🧭 kormány (kar: merre repüljünk, gomb: turbó), 🔫 ágyú 1 és 2 (kar: célzás, gomb: lövés).
+**Állapot: v0.3.0, 20 gonosz, fejlődés és rakétás** (2026-11-17). Egy hajó, négy állomás: 🧭 kormány (kar: merre repüljünk, gomb: turbó), 🔫 ágyú 1 és 2 (kar: célzás, gomb: lövés), 🚀 rakéta (kar: célzás, gomb: egy nagy, célkövető rakéta, ami robbanáskor mindent sebez a körében; utána kb. 3 mp újratöltés, a fegyver szintjével gyorsul).
 
 ## Hogyan megy a játék (v0.2)
 
@@ -17,8 +17,8 @@ Közös űrhajó 3-5 játékosnak: a kivetítőn egy hajó, rajta állomások (k
 ## Játék élesben
 
 1. A laptopon, Chrome-ban: **https://becze-csillaghajo.web.app/screen.html**, ezt húzd a kivetítőre (F: teljes képernyő).
-2. A telefonnal a QR-kód, utána szín, utána állomás (felül a három gomb). Egy állomáson egyszerre egy ember lehet.
-3. Laptopos játékos: a QR alatti cím egy másik ablakban; nyilak vagy WASD a kar, szóköz a gomb, 1-3 az állomás.
+2. A telefonnal a QR-kód, utána szín, utána állomás (felül a négy gomb). Egy állomáson egyszerre egy ember lehet.
+3. Laptopos játékos: a QR alatti cím egy másik ablakban; nyilak vagy WASD a kar, szóköz a gomb, 1-4 az állomás.
 
 A kar ott születik, ahol a hüvelykujj leér, ezért nem kell pontosan célozni rá.
 
