@@ -20,12 +20,12 @@ Internet kell hozzá (a telefonok a Firebase-en át beszélnek a kivetítővel).
 | Tárhely | Firebase Hosting, https://varvedok-jatek.web.app |
 | Adat | Realtime Database, `europe-west1`; `rooms/{KÓD}/host`, `/state` (a kivetítő írja), `/inputs` (a telefonok írják, a kivetítő törli) |
 | Belépés | névtelen (anonymous), mindenkinek |
-| Szabályok | `database.rules.json`: csak a szoba gazdája (a kivetítő) írhatja az állapotot és olvashatja a parancsokat; a parancsok mezői és értékei kötöttek. 2026-11-15-én két névtelen felhasználóval kipróbálva: 13 esetből 13 helyes |
+| Szabályok | a repó gyökerében, `database.rules.json` (közös a Csillaghajóval, az ott a `ship/` ág): csak a szoba gazdája (a kivetítő) írhatja az állapotot és olvashatja a parancsokat; a parancsok mezői és értékei kötöttek. 2026-11-15-én két névtelen felhasználóval kipróbálva: 13 esetből 13 helyes |
 
-Frissítés élesbe, ebből a mappából:
+Frissítés élesbe, a repó gyökeréből (2026-11-17 óta ott van a `firebase.json`, a két játék két külön tárhely-célpont):
 
 ```bash
-NO_UPDATE_NOTIFIER=1 npx -y firebase-tools@15 deploy --only hosting,database --project varvedok-jatek
+NO_UPDATE_NOTIFIER=1 npx -y firebase-tools@15 deploy --only hosting:defender,database --project varvedok-jatek
 ```
 
 A régi szobák az adatbázisban maradnak (pár kilobájt), automatikus takarítás nincs.
@@ -96,7 +96,7 @@ A kivetítő akkor is pontosan megy tovább, ha a lapja háttérbe kerül (a já
 | `phone.js`, `phone.html` | a vezérlő (telefon és laptop); csak parancsot küld |
 | `transport.js` | a kapcsolat: Firebase Realtime Database szobakóddal, vagy helyi mód (`?helyi=1`) |
 | `config.js` | a Firebase webes beállítása (nem titok) |
-| `database.rules.json`, `firebase.json`, `.firebaserc` | az adatbázis szabályai és a telepítés beállítása |
+| a repó gyökerében: `database.rules.json`, `firebase.json`, `.firebaserc` | az adatbázis szabályai és a telepítés beállítása, mindkét játéknak |
 | `proba-szimulacio.js` | egyensúly-próba a `proba.html` konzoljában: `await import('/proba-szimulacio.js')`, majd pl. `await runSim({ n: 4, gyenge: [3] })` |
 
 ## Egyensúly (mért szimulációval, 2026-11-15)

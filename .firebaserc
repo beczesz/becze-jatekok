@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "varvedok-jatek"
+  },
+  "targets": {
+    "varvedok-jatek": {
+      "hosting": {
+        "defender": ["varvedok-jatek"],
+        "csillaghajo": ["becze-csillaghajo"]
+      }
+    }
+  }
+}
