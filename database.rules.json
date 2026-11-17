@@ -142,6 +142,9 @@
             "st": {
               ".validate": "newData.isString() && newData.val().length <= 8"
             },
+            "k": {
+              ".validate": "newData.isBoolean()"
+            },
             "$other": {
               ".validate": false
             }
