@@ -37,7 +37,10 @@
   #base { position: absolute; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; border: 4px solid #475569; background: rgba(71,85,105,.25); left: 50%; top: 50%; pointer-events: none; }
   #knob { position: absolute; width: 74px; height: 74px; margin: -37px 0 0 -37px; border-radius: 50%; background: var(--c); border: 4px solid #fff; left: 50%; top: 50%; pointer-events: none; }
   #fire { position: relative; border-radius: 24px; background: var(--d); border: 6px solid var(--c); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; touch-action: none; text-align: center; }
-  #fire.on { background: var(--c); color: #0b1020; transform: scale(.96); }
+  #fire.on, #vine.on { background: var(--c); color: #0b1020; transform: scale(.96); }
+  #btns { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  #btns > button { flex: 1; }
+  #vine { position: relative; border-radius: 24px; background: #14532d; border: 6px solid #4ade80; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; touch-action: none; text-align: center; }
   #foot { display: flex; justify-content: space-between; align-items: center; color: var(--mut); font-size: 13px; gap: 8px; }
   #reset { padding: 8px 12px; border-radius: 14px; background: var(--card); font-size: 14px; position: relative; overflow: hidden; touch-action: none; }
   #reset i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(250,204,21,.35); }
@@ -67,7 +70,10 @@
   <div id="skill"></div>
   <div id="pads">
     <div id="stick"><div id="base"></div><div id="knob"></div><div class="lbl">futás · fel/le: mászás · le: kar</div></div>
-    <button id="fire"><span id="fireTxt">UGRÁS</span></button>
+    <div id="btns">
+      <button id="vine" hidden>🌱 INDA</button>
+      <button id="fire"><span id="fireTxt">UGRÁS</span></button>
+    </div>
   </div>
   <div id="foot"><button id="reset"><i></i>🔄 Pálya újra (tartsd nyomva)</button><span id="lag">késés: mérés…</span><span id="ver"></span></div>
 </section>

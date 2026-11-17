@@ -25,13 +25,13 @@ catch (e) { $('offline').textContent = 'Nem sikerült csatlakozni. Van internet?
 
 // ---------- a vezérlő-rekord ----------
 let me = 0;
-const pad = { x: 0, y: 0, b: false, st: '', s: 0, r: 0 };
+const pad = { x: 0, y: 0, b: false, k: false, st: '', s: 0, r: 0 };
 const sentAt = new Map();
 let lastSent = 0, sendTimer = null, lastJson = '';
 function sendPad(force) {
   if (!me) return;
   const now = performance.now();
-  const body = { x: pad.x, y: pad.y, b: pad.b, st: pad.st, r: pad.r };
+  const body = { x: pad.x, y: pad.y, b: pad.b, k: pad.k, st: pad.st, r: pad.r };
   const json = JSON.stringify(body);
   if (!force && json === lastJson && now - lastSent < PAD_HEARTBEAT_MS) return;
   if (now - lastSent < PAD_MS) {
@@ -92,7 +92,7 @@ async function choose(p) {
   me = p;
   try {
     pad.s++;
-    await net.setPad(p, { x: 0, y: 0, b: false, st: '', r: 0, s: pad.s });
+    await net.setPad(p, { x: 0, y: 0, b: false, k: false, st: '', r: 0, s: pad.s });
   } catch (e) {
     me = 0; $('pickMsg').textContent = `${MANOK[p].name} már foglalt, válassz mást!`; showPick(); return;
   }
@@ -102,7 +102,13 @@ async function choose(p) {
   document.documentElement.style.setProperty('--d', M.dark);
   $('meIcon').textContent = M.icon; $('meName').textContent = M.name;
   $('skill').textContent = M.skill;
-  $('fireTxt').innerHTML = p === 3 ? 'UGRÁS<br><small>tartsd: lebegés</small>' : p === 4 ? 'UGRÁS<br><small>a magnál: növesztés</small>' : 'UGRÁS';
+  $('fireTxt').innerHTML = {
+    1: 'UGRÁS<br><small>aki rajtad áll, felröpül</small>',
+    2: 'UGRÁS<br><small>a levegőben is, újra és újra</small>',
+    3: 'REPÜLÉS<br><small>tartsd nyomva</small>',
+    4: 'UGRÁS',
+  }[p];
+  $('vine').hidden = p !== 4;
   $('pick').hidden = true; $('game').hidden = false;
   render();
 }
@@ -166,6 +172,14 @@ fire.addEventListener('pointerup', () => press(false));
 fire.addEventListener('pointercancel', () => press(false));
 fire.addEventListener('contextmenu', (e) => e.preventDefault());
 
+// Indás második gombja: inda (a magnál a mag)
+const vine = $('vine');
+const vinePress = (v) => { if (pad.k === v) return; pad.k = v; vine.classList.toggle('on', v); if (v) navigator.vibrate?.(25); sendPad(false); };
+vine.addEventListener('pointerdown', (e) => { vine.setPointerCapture(e.pointerId); vinePress(true); });
+vine.addEventListener('pointerup', () => vinePress(false));
+vine.addEventListener('pointercancel', () => vinePress(false));
+vine.addEventListener('contextmenu', (e) => e.preventDefault());
+
 // pálya újra: 1,5 mp-ig nyomva tartva szavaz; a kivetítő akkor kezdi újra, ha a játékosok fele szavaz
 const reset = $('reset'), bar = reset.querySelector('i');
 let resetT = null, resetStart = 0;
@@ -197,11 +211,13 @@ addEventListener('keydown', (e) => {
   if (!me || e.target.tagName === 'INPUT') return;
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (k === ' ') { e.preventDefault(); press(true); return; }
+  if (k === 'e' || k === 'Enter') { e.preventDefault(); vinePress(true); return; }
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(k)) { e.preventDefault(); keys.add(k); keyStick(); }
 });
 addEventListener('keyup', (e) => {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (k === ' ') { press(false); return; }
+  if (k === 'e' || k === 'Enter') { vinePress(false); return; }
   if (keys.delete(k)) keyStick();
 });
 

@@ -2,7 +2,7 @@
 import { connectScreen } from './transport.js';
 import {
   VERSION, MANOK, MANO_IDS, LETTER_COLORS, T, COLS, ROWS, GRAVITY,
-  FLOAT_FUEL, FLOAT_UP, FLOAT_UP_LOADED, PAD_GONE_MS,
+  HELI_UP, HELI_UP_LOADED, HELI_DOWN, VINE_LIFE, VINE_MAX, LAUNCH, PAD_GONE_MS,
 } from './rules.js';
 import { LEVELS } from './levels.js';
 
@@ -45,7 +45,7 @@ let qrCanvas = null;
 
 // ---------- játékosok (a játékos száma = a manó száma) ----------
 const rnd = (a, b) => a + Math.random() * (b - a);
-const P = Object.fromEntries(MANO_IDS.map((p) => [p, { joined: false, x: 0, y: 0, b: false, st: '', s: 0, r: 0, seen: 0, rate: 0, cnt: 0, prevB: false, prevY: 0, buf: 0 }]));
+const P = Object.fromEntries(MANO_IDS.map((p) => [p, { joined: false, x: 0, y: 0, b: false, k: false, st: '', s: 0, r: 0, seen: 0, rate: 0, cnt: 0, prevB: false, prevK: false, prevY: 0, buf: 0 }]));
 net.onPad((p, pad) => {
   const Q = P[p];
   if (!Q) return;
@@ -53,7 +53,7 @@ net.onPad((p, pad) => {
   const clamp = (v) => Math.max(-1, Math.min(1, Number(v) || 0));
   if (!Q.joined) { Q.joined = true; spawnMano(p); }
   Q.seen = performance.now(); Q.cnt++;
-  Q.x = clamp(pad.x); Q.y = clamp(pad.y); Q.b = !!pad.b; Q.s = pad.s || 0; Q.r = pad.r || 0; Q.st = pad.st || '';
+  Q.x = clamp(pad.x); Q.y = clamp(pad.y); Q.b = !!pad.b; Q.k = !!pad.k; Q.s = pad.s || 0; Q.r = pad.r || 0; Q.st = pad.st || '';
 });
 setInterval(() => {
   const now = performance.now();
@@ -67,7 +67,7 @@ setInterval(() => {
 // ---------- a pálya ----------
 const G = {
   li: 0, L: null, grid: [], spawns: {}, exits: {}, stars: [], plates: [], doors: [], levers: {}, leverPos: [],
-  seeds: [], grow: [], crack: {}, crates: [], manos: {}, parts: [], got: 0,
+  seeds: [], grow: [], vines: [], crack: {}, crates: [], manos: {}, parts: [], got: 0,
   phase: 'play', phaseT: 0, time: 0, resetLatch: false, dirty: true,
 };
 try { G.li = Math.max(0, Math.min(LEVELS.length - 1, Number(localStorage.getItem('mano-palya')) || 0)); } catch (e) { /* privát mód */ }
@@ -77,7 +77,7 @@ function loadLevel(i) {
   try { localStorage.setItem('mano-palya', String(G.li)); } catch (e) { /* privát mód */ }
   const L = G.L = LEVELS[G.li];
   G.grid = []; G.spawns = {}; G.exits = {}; G.stars = []; G.plates = []; G.doors = []; G.levers = {}; G.leverPos = [];
-  G.seeds = []; G.grow = []; G.crack = {}; G.crates = []; G.parts = []; G.got = 0; G.phase = 'play'; G.phaseT = 0;
+  G.seeds = []; G.grow = []; G.vines = []; G.crack = {}; G.crates = []; G.parts = []; G.got = 0; G.phase = 'play'; G.phaseT = 0;
   const heavy = L.heavy || '', levers = L.levers || '';
   L.map.forEach((row, r) => {
     G.grid[r] = [];
@@ -108,7 +108,9 @@ function spawnMano(p) {
   if (!G.L) return;
   const s = G.spawns[p], M = MANOK[p];
   const old = G.manos[p];
-  G.manos[p] = newBody(s.c, s.r, M.w, M.h, { kind: 'mano', id: p, face: 1, fuel: FLOAT_FUEL, climb: false, coyote: 0, flash: old ? 0.6 : 0, blink: 0, squash: 0 });
+  G.manos[p] = newBody(s.c, s.r, M.w, M.h, { kind: 'mano', id: p, face: 1, climb: false, coyote: 0, flash: old ? 0.6 : 0, blink: 0, squash: 0, hang: null, hx: 0, grabCd: 0, fling: 0 });
+  // aki ebbe a manóba kapaszkodott, az elenged
+  for (const o of Object.values(G.manos)) if (o.hang === old) o.hang = null;
   burst(s.c * T + T / 2, s.r * T + T / 2, M.color, 18, 260);
 }
 
@@ -210,12 +212,20 @@ function update(dt) {
     const M = MANOK[m.id], Q = P[m.id], x0 = m.x, y0 = m.y;
     const carrier = m.on;
     if (carrier && (carrier.dx || carrier.dy)) { moveX(m, carrier.dx); if (carrier.dy < 0) moveY(m, carrier.dy); else m.y += carrier.dy; }
-    const pressed = Q.b && !Q.prevB;
+    const pressed = Q.b && !Q.prevB, kPressed = Q.k && !Q.prevK;
     if (pressed) Q.buf = 0.15; else Q.buf = Math.max(0, Q.buf - dt);
     const ix = Math.abs(Q.x) > 0.2 ? Q.x : 0, iy = Q.y;
     if (ix) m.face = Math.sign(ix);
+    m.grabCd = Math.max(0, m.grabCd - dt); m.fling = Math.max(0, m.fling - dt);
 
-    const onVine = overlapTiles({ x: m.x + m.w * .3, y: m.y, w: m.w * .4, h: m.h }, (c, r) => tileAt(c, r) === 'V');
+    // kapaszkodás a Kopterbe (vagy abba, aki már kapaszkodik): a gomb leugrik róla, a kar lefelé elengedi
+    if (m.hang) {
+      if (Q.buf > 0) { m.hang = null; m.vy = -M.jump * 0.75; m.grabCd = 0.5; Q.buf = 0; m.squash = 0.2; }
+      else if (iy > 0.7) { m.hang = null; m.vy = 0; m.grabCd = 0.6; }
+      else { m.vx = 0; m.vy = 0; m.dx = 0; m.dy = 0; Q.prevB = Q.b; Q.prevK = Q.k; Q.prevY = iy; continue; }
+    }
+
+    const onVine = overlapTiles({ x: m.x + m.w * .3, y: m.y, w: m.w * .4, h: m.h }, (c, r) => tileAt(c, r) === 'V' || tileAt(c, r) === 'v');
     if (!onVine) m.climb = false;
     else if (Math.abs(iy) > 0.45) m.climb = true;
 
@@ -224,28 +234,51 @@ function update(dt) {
       if (Q.buf > 0) { m.climb = false; m.vy = -M.jump * 0.85; Q.buf = 0; }
     } else {
       const target = ix * M.speed;
-      m.vx += (target - m.vx) * Math.min(1, (m.ground ? 14 : 7) * dt);
-      // Lufi: ugrás után nyomva tartott gombbal lebeg (ha valaki a fején áll, lassabban emelkedik)
-      const loaded = m.id === 3 && Object.values(G.manos).some((o) => o.on === m);
-      const up = loaded ? FLOAT_UP_LOADED : FLOAT_UP;
-      if (m.id === 3 && !m.ground && Q.b && m.fuel > 0 && m.vy > -up) {
-        m.vy += (-up - m.vy) * Math.min(1, 8 * dt); m.fuel -= dt; m.floating = 0.15;   // lebegés közben nincs gravitáció
+      if (!m.fling) m.vx += (target - m.vx) * Math.min(1, (m.ground ? 14 : 7) * dt);
+      if (m.id === 3) {
+        // Kopter: nyomva tartott gombbal emelkedik, bármeddig; elengedve lassan ereszkedik, kar lefelé gyorsabban
+        const loaded = Object.values(G.manos).some((o) => o.on === m || o.hang === m);
+        if (Q.b) { m.vy += (-(loaded ? HELI_UP_LOADED : HELI_UP) - m.vy) * Math.min(1, 6 * dt); m.floating = 0.3; }
+        else if (!m.ground) m.vy += ((iy > 0.5 ? 480 : HELI_DOWN) - m.vy) * Math.min(1, 4 * dt);
+        else m.vy = Math.min(1100, m.vy + GRAVITY * dt);
       } else m.vy = Math.min(1100, m.vy + GRAVITY * dt);
-      if (m.ground) { m.coyote = 0.1; m.fuel = FLOAT_FUEL; } else m.coyote = Math.max(0, m.coyote - dt);
-      if (Q.buf > 0 && m.coyote > 0) { m.vy = -M.jump; m.coyote = 0; Q.buf = 0; m.squash = 0.2; }
+      if (m.ground) m.coyote = 0.1; else m.coyote = Math.max(0, m.coyote - dt);
+      if (m.id !== 3 && Q.buf > 0 && m.coyote > 0) {
+        if (m.id === 1) launchRiders(m);
+        m.vy = -M.jump; m.coyote = 0; Q.buf = 0; m.squash = 0.2;
+      } else if (m.id === 2 && Q.buf > 0 && !m.ground) {
+        // Fürge: a levegőben is ugrik, újra és újra
+        m.vy = -M.jump * 0.85; Q.buf = 0; m.squash = 0.2;
+        burst(m.x + m.w / 2, m.y + m.h, '#fdba74', 10, 160);
+      }
     }
     m.floating = Math.max(0, (m.floating || 0) - dt);
+
+    // kapaszkodás: aki a levegőben a Kopter (vagy egy kapaszkodó) aljához ér, belekapaszkodik
+    if (m.id !== 3 && !m.ground && !m.grabCd && !m.climb) {
+      for (const c of Object.values(G.manos)) {
+        if (c === m || !(c.id === 3 || c.hang) || c.hang === m) continue;
+        const zone = { x: c.x - 12, y: c.y + c.h * 0.5, w: c.w + 24, h: c.h * 0.5 + 22 };
+        if (!overl({ x: m.x, y: m.y, w: m.w, h: 14 }, zone)) continue;
+        m.hang = c; m.hx = Math.max(-m.w * 0.5, Math.min(c.w - m.w * 0.5, m.x - c.x)); m.vx = 0; m.vy = 0; m.fling = 0;
+        burst(m.x + m.w / 2, m.y, MANOK[m.id].color, 8, 120);
+        break;
+      }
+      if (m.hang) { Q.prevB = Q.b; Q.prevK = Q.k; Q.prevY = iy; continue; }
+    }
+
     m.ground = false; m.on = null;
     moveX(m, m.vx * dt);
     const wasUp = m.vy;
     moveY(m, m.vy * dt);
     if (m.ground && wasUp > 500) m.squash = 0.18;
+    if (m.fling > 0.2 && Math.random() < 0.6) G.parts.push({ x: m.x + m.w / 2, y: m.y + m.h, vx: rnd(-40, 40), vy: rnd(20, 80), life: 0.5, color: ['#facc15', '#f472b6', '#60a5fa', '#4ade80'][Math.floor(Math.random() * 4)], g: 200 });
     m.dx = m.x - x0; m.dy = m.y - y0;
     m.flash = Math.max(0, m.flash - dt); m.squash = Math.max(0, m.squash - dt);
 
     // tüske, leesés: vissza a rajthoz, büntetés nélkül
     const hurt = overlapTiles({ x: m.x + 6, y: m.y + 6, w: m.w - 12, h: m.h - 6 }, (c, r) => tileAt(c, r) === '^');
-    if ((hurt || m.y > ROWS * T + 40) && m.flash <= 0) { Q.prevB = Q.b; Q.prevY = iy; burst(m.x + m.w / 2, m.y + m.h / 2, '#c084fc', 20, 300); spawnMano(m.id); continue; }
+    if ((hurt || m.y > ROWS * T + 40) && m.flash <= 0) { Q.prevB = Q.b; Q.prevK = Q.k; Q.prevY = iy; burst(m.x + m.w / 2, m.y + m.h / 2, '#c084fc', 20, 300); spawnMano(m.id); continue; }
 
     // csillag
     for (const s of G.stars) if (!s.got && overl(m, { x: s.c * T + 12, y: s.r * T + 12, w: T - 24, h: T - 24 })) { s.got = true; G.got++; burst(s.c * T + T / 2, s.r * T + T / 2, '#fde047', 24, 300); }
@@ -271,13 +304,15 @@ function update(dt) {
       }
     }
 
-    // Indás: a magnál a gomb növeszt
-    if (m.id === 4 && pressed) {
+    // Indás: az INDA gomb a magnál a magot növeszti, máshol egy indát egészen fel (30 mp-ig él)
+    if (m.id === 4 && kPressed) {
+      let used = false;
       for (const s of G.seeds) {
         if (s.used || !overl(m, { x: s.c * T - 8, y: s.r * T, w: T + 16, h: T })) continue;
-        s.used = true; m.vy = 0;
+        s.used = true; used = true;
         growFrom(s);
       }
+      if (!used) growVine(m);
     }
 
     // kar: a karnál a kar lefelé húzása átbillenti
@@ -288,8 +323,32 @@ function update(dt) {
         burst(lv.c * T + T / 2, lv.r * T + T / 2, colorOf(lv.l), 16, 220);
       }
     }
-    Q.prevB = Q.b; Q.prevY = iy;
+    Q.prevB = Q.b; Q.prevK = Q.k; Q.prevY = iy;
   }
+
+  // a kapaszkodók a hordozójuk alatt lógnak (előbb a közvetlenül a Kopterbe kapaszkodók, aztán az alattuk lévők)
+  const depth = (m) => { let d = 0, c = m; while (c.hang && d < 5) { c = c.hang; d++; } return d; };
+  for (const m of Object.values(G.manos).filter((o) => o.hang).sort((a, b) => depth(a) - depth(b))) {
+    const c = m.hang;
+    if (!G.manos[c.id] || G.manos[c.id] !== c || (c.id !== 3 && !c.hang)) { m.hang = null; m.grabCd = 0.4; continue; }
+    const x0 = m.x, y0 = m.y;
+    m.ground = false; m.on = null;
+    moveX(m, c.x + m.hx - m.x);
+    moveY(m, c.y + c.h - 6 - m.y);
+    m.dx = m.x - x0; m.dy = m.y - y0;
+    if (Math.abs(m.x - (c.x + m.hx)) > T * 0.8 || Math.abs(m.y - (c.y + c.h - 6)) > T * 0.8) { m.hang = null; m.grabCd = 0.5; }
+    for (const s of G.stars) if (!s.got && overl(m, { x: s.c * T + 12, y: s.r * T + 12, w: T - 24, h: T - 24 })) { s.got = true; G.got++; burst(s.c * T + T / 2, s.r * T + T / 2, '#fde047', 24, 300); }
+  }
+
+  // Indás indái: 30 mp után elsorvadnak
+  for (const v of G.vines) {
+    v.life -= dt; v.grow = Math.min(1, v.grow + dt * 2.5);
+    if (v.life <= 0) {
+      for (const cell of v.cells) if (G.grid[cell.r][v.c] === 'v') G.grid[cell.r][v.c] = cell.orig;
+      burst(v.c * T + T / 2, v.cells[v.cells.length - 1].r * T, '#a3a3a3', 14, 140);
+    }
+  }
+  G.vines = G.vines.filter((v) => v.life > 0);
 
   // a növő inda és híd: csempénként, kis késéssel, hogy látsszon a növés
   for (const g of G.grow) {
@@ -319,6 +378,7 @@ function update(dt) {
 
   for (const q of G.parts) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += q.g * dt; q.life -= dt; }
   G.parts = G.parts.filter((q) => q.life > 0);
+  G.boom = Math.max(0, (G.boom || 0) - dt);
   for (const s of G.stars) s.t += dt;
 
   // pálya újra: a játékosok fele hosszan nyomja a telefonon az „Újra” gombot
@@ -359,6 +419,40 @@ function growFrom(s) {
     }
   }
   burst(s.c * T + T / 2, s.r * T + T / 2, '#4ade80', 20, 220);
+}
+// Indás indája: a lábától egyenesen fel, amíg falba, kapuba vagy rácsba nem ütközik
+function growVine(m) {
+  const c = Math.floor((m.x + m.w / 2) / T);
+  const cells = [];
+  for (let r = Math.floor((m.y + m.h - 1) / T); r >= 0; r--) {
+    const t = tileAt(c, r);
+    if (t !== '.' && t !== ':') break;
+    cells.push({ r, orig: t });
+  }
+  if (cells.length < 2) { burst(m.x + m.w / 2, m.y, '#a3a3a3', 8, 100); return; }
+  while (G.vines.length >= VINE_MAX) { const old = G.vines.shift(); for (const cell of old.cells) if (G.grid[cell.r][old.c] === 'v') G.grid[cell.r][old.c] = cell.orig; }
+  for (const cell of cells) G.grid[cell.r][c] = 'v';
+  G.vines.push({ c, cells, life: VINE_LIFE, grow: 0 });
+  burst(c * T + T / 2, m.y + m.h, '#4ade80', 22, 240);
+}
+// Kavics ugrik: aki a fején áll (vagy annak a fején), az magasra repül; ha mindenki rajta áll, tűzijáték
+function launchRiders(k) {
+  const riders = Object.values(G.manos).filter((o) => { let c = o.on, d = 0; while (c && d < 5) { if (c === k) return true; c = c.on; d++; } return false; });
+  if (!riders.length) return;
+  const others = MANO_IDS.filter((p) => P[p].joined && p !== 1).length;
+  const fireworks = riders.length >= 2 && riders.length >= others;
+  riders.forEach((o, i) => {
+    o.on = null; o.hang = null; o.climb = false; o.squash = 0.2;
+    if (fireworks) {
+      const a = (riders.length === 1 ? 0 : (i / (riders.length - 1)) * 2 - 1) * 1.0 + rnd(-0.15, 0.15);
+      o.vx = Math.sin(a) * 950; o.vy = -LAUNCH * rnd(0.85, 1.05); o.fling = 0.9;
+    } else { o.vy = -LAUNCH; o.vx = 0; o.fling = 0.25; }
+  });
+  const x = k.x + k.w / 2, y = k.y;
+  if (fireworks) {
+    for (const col of ['#f87171', '#facc15', '#4ade80', '#60a5fa', '#f472b6', '#c084fc', '#fb923c']) burst(x, y - 40, col, 30, 700);
+    G.boom = 1.2;
+  } else burst(x, y, '#e2e8f0', 20, 300);
 }
 
 // ---------- rajzolás ----------
@@ -483,6 +577,24 @@ function drawDynamic() {
     ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x + Math.sin(a) * 30, y + 10 - Math.cos(a) * 30, 11, 0, 7); ctx.fill();
     if (!on) { ctx.globalAlpha = .5 + .5 * Math.sin(G.time * 5); ctx.fillStyle = '#fff'; ctx.font = '900 22px system-ui'; ctx.textAlign = 'center'; ctx.fillText('⬇', x + 30, y - 18); ctx.globalAlpha = 1; }
   }
+  // Indás indái (az utolsó 5 mp-ben villognak, aztán elsorvadnak)
+  for (const v of G.vines) {
+    const x = v.c * T + T / 2, bottom = (v.cells[0].r + 1) * T, top = v.cells[v.cells.length - 1].r * T;
+    const yTop = bottom - (bottom - top) * v.grow;
+    ctx.globalAlpha = v.life < 5 ? 0.45 + 0.4 * Math.abs(Math.sin(G.time * 6)) : 1;
+    const old = v.life < 5;
+    ctx.strokeStyle = old ? '#a16207' : '#15803d'; ctx.lineWidth = 9; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x, bottom);
+    for (let y = bottom; y > yTop; y -= 16) ctx.lineTo(x + Math.sin(y / 22) * 9, y);
+    ctx.lineTo(x, yTop); ctx.stroke();
+    ctx.fillStyle = old ? '#ca8a04' : '#4ade80';
+    for (let y = bottom - 26, i = 0; y > yTop; y -= 34, i++) { const s = i % 2 ? 1 : -1; ctx.beginPath(); ctx.ellipse(x + s * 14 + Math.sin(y / 22) * 9, y, 13, 7, s * .6, 0, 7); ctx.fill(); }
+    // hátralévő idő a tövénél
+    ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(11,16,32,.6)'; ctx.beginPath(); ctx.arc(x, bottom - 14, 15, 0, 7); ctx.fill();
+    ctx.fillStyle = '#f0fdf4'; ctx.font = '800 16px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(Math.ceil(v.life)), x, bottom - 13);
+  }
+  ctx.globalAlpha = 1;
   // magok
   for (const s of G.seeds) {
     const x = s.c * T + T / 2, y = (s.r + 1) * T;
@@ -517,12 +629,22 @@ function drawMano(m) {
   const w = m.w * (1 + sq), h = m.h * (1 - sq), x = m.x + m.w / 2, y = m.y + m.h;
   ctx.save(); ctx.translate(x, y);
   if (m.flash > 0 && Math.floor(G.time * 12) % 2) ctx.globalAlpha = .4;
-  // Lufi lufija
+  // kapaszkodó: két kéz fel a hordozóhoz
+  if (m.hang) {
+    ctx.strokeStyle = M.dark; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * w * .3, -h + 8); ctx.lineTo(s * w * .22, -h - 8); ctx.stroke(); }
+  }
+  // Kopter: farok, árboc, forgó rotor (repülés közben gyorsabban pörög)
   if (m.id === 3) {
-    const big = m.floating > 0 ? 1.35 : 1, by = -h - 34 * big + Math.sin(G.time * 3) * 3;
-    ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -h + 4); ctx.quadraticCurveTo(8, (by - h) / 2, 0, by + 16 * big); ctx.stroke();
-    ctx.fillStyle = '#f9a8d4'; ctx.beginPath(); ctx.ellipse(0, by, 15 * big, 19 * big, 0, 0, 7); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.beginPath(); ctx.ellipse(-5 * big, by - 6 * big, 4, 6, -.4, 0, 7); ctx.fill();
+    ctx.fillStyle = M.dark;
+    ctx.beginPath(); ctx.moveTo(-m.face * w * .4, -h * .55); ctx.lineTo(-m.face * w * 1.05, -h * .75); ctx.lineTo(-m.face * w * 1.05, -h * .55); ctx.lineTo(-m.face * w * .4, -h * .35); ctx.fill();
+    ctx.save(); ctx.translate(-m.face * w * 1.05, -h * .65); ctx.rotate(G.time * 30); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(-10, -2, 20, 4); ctx.restore();
+    ctx.fillStyle = '#334155'; ctx.fillRect(-3, -h - 14, 6, 16);
+    const spin = m.floating > 0 || !m.ground ? 34 : 6, k = Math.cos(G.time * spin);
+    ctx.fillStyle = 'rgba(226,232,240,.9)';
+    ctx.beginPath(); ctx.ellipse(0, -h - 14, Math.max(4, Math.abs(k) * w * 0.95), 4, 0, 0, 7); ctx.fill();
+    if (spin > 10) { ctx.strokeStyle = 'rgba(226,232,240,.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, -h - 14, w * 0.95, 6, 0, 0, 7); ctx.stroke(); }
+    ctx.fillStyle = '#475569'; ctx.beginPath(); ctx.arc(0, -h - 14, 5, 0, 7); ctx.fill();
   }
   // Fürge fülei
   if (m.id === 2) {
@@ -609,6 +731,13 @@ function draw() {
   for (const q of G.parts) { ctx.globalAlpha = Math.max(0, q.life); ctx.fillStyle = q.color; ctx.fillRect(q.x - 4, q.y - 4, 8, 8); }
   ctx.globalAlpha = 1;
   ctx.restore();
+  // tűzijáték-villanás és felirat
+  if (G.boom > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${Math.max(0, G.boom - 0.9) * 0.8})`; ctx.fillRect(0, OY, W, H - OY);
+    ctx.globalAlpha = Math.min(1, G.boom); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#facc15'; ctx.font = `900 ${90 + (1.2 - G.boom) * 40}px system-ui`; ctx.fillText('🎆 TŰZIJÁTÉK! 🎆', W / 2, OY + 200);
+    ctx.globalAlpha = 1;
+  }
   hud();
   overlays();
 }
@@ -639,7 +768,7 @@ function frame() { tick(); draw(); requestAnimationFrame(frame); }
 requestAnimationFrame(frame);
 setInterval(tick, 250);
 
-// próbához a konzolból: __mano.join(1,2,3,4) beléptet, __mano.go(5) az 5. pályára ugrik, __mano.P[3].b = true nyomja Lufi gombját
+// próbához a konzolból: __mano.join(1,2,3,4) beléptet, __mano.go(5) az 5. pályára ugrik, __mano.P[3].b = true nyomja Kopter gombját, __mano.P[4].k az INDA gomb
 window.__mano = {
   G, P, step: (sec) => { for (let i = 0; i < sec / STEP; i++) update(STEP); },
   join: (...ids) => { for (const p of ids) { Object.assign(P[p], { joined: true, seen: performance.now() + 1e9 }); spawnMano(p); } },

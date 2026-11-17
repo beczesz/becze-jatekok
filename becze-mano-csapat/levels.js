@@ -3,8 +3,8 @@
 // Jelek:
 //   #  fal              x  repedt kő (Kavics alatt beszakad)     g  rács (csak Fürge fér át)
 //   ^  tüske (aki hozzáér, visszakerül a rajthoz, büntetés nélkül)
-//   1-4  a manók rajthelye (1 Kavics, 2 Fürge, 3 Lufi, 4 Indás)
-//   K F L I  a manók kijárata (Kavics, Fürge, Lufi, Indás); a pálya kész, ha mindenki a sajátján áll
+//   1-4  a manók rajthelye (1 Kavics, 2 Fürge, 3 Kopter, 4 Indás)
+//   K F L I  a manók kijárata (Kavics, Fürge, Kopter (L betű, a régi Lufi), Indás); a pálya kész, ha mindenki a sajátján áll
 //   a-e  gomb (vagy kar, ha a `levers` között van); A-E  kapu, amit a gomb nyit
 //   s  inda-mag: Indás gombnyomására a szomszédos `:` jelekből inda nő (mászni lehet rajta)
 //   w  híd-mag: Indás gombnyomására a szomszédos `_` jelekből híd lesz
@@ -86,7 +86,7 @@ export const LEVELS = [
   },
   {
     name: 'Fent a kar',
-    hint: 'A sárga kart csak Lufi éri el: ugorj, tartsd nyomva a gombot, és húzd le a kart!',
+    hint: 'A sárga kar magasan van: Kopter felrepül, vagy Fürge felugrál, és lehúzza a kart!',
     levers: 'c',
     map: [
       '##############################',
@@ -109,7 +109,7 @@ export const LEVELS = [
   },
   {
     name: 'Indás kertje',
-    hint: 'Indás a magnál megnyomja a gombot: inda nő a falra, és híd a tüskék fölé.',
+    hint: 'Indás az INDA gombbal bárhol indát növeszt; a magnál hidat is a tüskék fölé.',
     map: [
       '##############################',
       '#............................#',
@@ -130,8 +130,8 @@ export const LEVELS = [
     ],
   },
   {
-    name: 'Lufi-lift',
-    hint: 'Ez a fal túl magas. Álljatok Lufi fejére, ő felvisz! És ki marad lent a gombon?',
+    name: 'Kopter-lift',
+    hint: 'Ez a fal túl magas. Kapaszkodjatok a Kopterbe, vagy röpítsen fel Kavics! És ki marad lent a gombon?',
     map: [
       '##############################',
       '#...................#........#',
@@ -222,7 +222,7 @@ export const LEVELS = [
   },
   {
     name: 'A nagy kaland',
-    hint: 'Itt minden kell: Kavics gombja, Indás indája és hídja, Lufi karja és Fürge rácsa.',
+    hint: 'Itt minden kell: Kavics gombja, Indás indája és hídja, Kopter karja és Fürge rácsa.',
     heavy: 'a',
     levers: 'c',
     need: { A: [['a'], ['d']], C: [['c', 'b']] },
